@@ -22,6 +22,25 @@ into one canonical bundle, and projecting it onto the OpenShell enforcement surf
 shows **capability #4 — Traceable evidence**.
 (Runs on a Kubernetes or OpenShift cluster.)
 
+## Access — private registry (start here)
+
+The APF images and Helm chart are **private** on GHCR (`ghcr.io/mkhaas/apf`). Get access and authenticate first:
+
+1. **Ask the owner (@mkhaas)** to grant your GitHub user access to the packages.
+2. **Create a GitHub PAT** with the **`read:packages`** scope (github.com/settings/tokens).
+3. **Log in** (paste the PAT as the password):
+   ```bash
+   docker login ghcr.io -u <your-github-username>
+   helm registry login ghcr.io -u <your-github-username>
+   ```
+4. **Create a cluster pull secret** (once):
+   ```bash
+   kubectl create namespace apf 2>/dev/null
+   kubectl -n apf create secret docker-registry ghcr-pull \
+     --docker-server=ghcr.io --docker-username=<your-github-username> --docker-password=<your-PAT>
+   ```
+5. Add **`--set image.pullSecrets[0].name=ghcr-pull`** to every `helm install` / `helm upgrade` below (and the signing Job).
+
 ## Fit with the Red Hat SAW governance-interceptor pattern
 
 APF implements the **same OpenShell `GatewayInterceptor` gRPC contract** as the Red Hat **Secure Agent
@@ -53,18 +72,6 @@ CLI you run with `docker` — not a deployed container; the pod itself runs just
 
 Prerequisites: a Kubernetes **or** OpenShift cluster with **OpenShell** installed, `kubectl`/`helm`, and a
 signing key pair (a dev key is included; use your own for production).
-
-**Access (private registry).** These images and chart are **private** on GHCR. Ask the owner (**@mkhaas**) to
-grant your GitHub user access, then authenticate and create a cluster pull secret once:
-```bash
-# create a GitHub PAT with read:packages, then:
-docker login ghcr.io -u <your-github-username>          # paste the PAT
-helm registry login ghcr.io -u <your-github-username>   # same PAT (for the OCI chart)
-kubectl create namespace apf 2>/dev/null
-kubectl -n apf create secret docker-registry ghcr-pull \
-  --docker-server=ghcr.io --docker-username=<your-github-username> --docker-password=<your-PAT>
-```
-Then add **`--set image.pullSecrets[0].name=ghcr-pull`** to each `helm install` / `helm upgrade` below (and the signing Job).
 
 ## Prerequisite — create the signed bundle (do this before Helm)
 
