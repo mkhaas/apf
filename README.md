@@ -1,5 +1,22 @@
 # APF (Agent Policy Fabric) — GTC Berlin PoC
 
+## Contents
+
+- [Overview](#overview)
+- [Access — private registry (start here)](#access--private-registry-start-here)
+- [Fit with the Red Hat SAW governance-interceptor pattern](#fit-with-the-red-hat-saw-governance-interceptor-pattern)
+- [Details](#details)
+- [Prerequisite — create the signed bundle (do this before Helm)](#prerequisite--create-the-signed-bundle-do-this-before-helm)
+- [The Helm chart](#the-helm-chart)
+- [The demo](#the-demo)
+- [Two install paths](#two-install-paths)
+- [Authoring & signing](#authoring--signing)
+- [Audit & insights](#audit--insights)
+- [Operations quick-reference](#operations-quick-reference)
+- [Appendix — All Helm values supported](#appendix--all-helm-values-supported)
+- [Signing — reference](#signing--reference)
+- [Concepts](#concepts)
+
 ## Overview
 
 **Agent Policy Fabric (APF)** aims to provide a reference blueprint for governing autonomous agents by
