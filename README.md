@@ -39,7 +39,7 @@ The APF images and Helm chart are **private** on GHCR (`ghcr.io/mkhaas/apf`). Ge
    kubectl -n apf create secret docker-registry ghcr-pull \
      --docker-server=ghcr.io --docker-username=<your-github-username> --docker-password=<your-PAT>
    ```
-5. Add **`--set image.pullSecrets[0].name=ghcr-pull`** to every `helm install` / `helm upgrade` below (and the signing Job).
+   Every `helm install` / `helm upgrade` in this doc already carries `--set image.pullSecrets[0].name=ghcr-pull`.
 
 ## Fit with the Red Hat SAW governance-interceptor pattern
 
@@ -79,7 +79,7 @@ signing key pair (a dev key is included; use your own for production).
 
 | You want… | What to do |
 |---|---|
-| **APF demo policy + APF demo key** — just try it | **Skip this prerequisite — apply Helm directly:** `helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --create-namespace` |
+| **APF demo policy + APF demo key** — just try it | **Skip this prerequisite — apply Helm directly:** `helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --create-namespace --set image.pullSecrets[0].name=ghcr-pull` |
 | **Your own key** (keep the APF demo policy, or use yours) | Sign the policy with your key, then install — the **3 steps below** (skip the editing if you keep the APF demo policy). |
 | **Your own policy** (with the APF demo key or yours) | Edit the policy, then sign + install — the **3 steps below**. |
 
@@ -127,7 +127,7 @@ docker run --rm -v "$PWD/policy-bundle:/work" -v "$PWD/keys:/keys" \
     --template /work/demo-bundle.template.yaml --base-dir /work --out /work/demo-bundle.yaml
 # 2) package the signed folder and install it (on OpenShift, add: --set openshift=true):
 ( cd policy-bundle && tar czf /tmp/bundle.tgz * )
-helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --create-namespace --set-file bundle.tarGz=/tmp/bundle.tgz
+helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --create-namespace --set image.pullSecrets[0].name=ghcr-pull --set-file bundle.tarGz=/tmp/bundle.tgz
 ```
 
 > **No Docker on your workstation?** The chart can sign your policy **in-cluster** with a one-shot Job
@@ -158,7 +158,7 @@ The chart **sets up everything it needs for you** — you don't create any Kuber
 
 ### Values to run
 
-**None are required.** `helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --create-namespace` runs out of the box with
+**None are required.** `helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --create-namespace --set image.pullSecrets[0].name=ghcr-pull` runs out of the box with
 a baked demo bundle + dev key. To run *your* policy, pass your files (the chart turns them into the
 Kubernetes objects):
 
@@ -212,7 +212,7 @@ current OpenShell sandbox policy into `policy-bundle/sandbox/default-policy.yaml
 
 **Step 2 — install APF** (the chart sets up everything it needs from your files):
 ```bash
-helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --create-namespace \
+helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --create-namespace --set image.pullSecrets[0].name=ghcr-pull \
   --set-file bundle.tarGz=/tmp/bundle.tgz \
   --set-file trustRoot.pub=keys/apf-dev.pub \
   --set-file signing.seed=keys/apf-dev.seed
@@ -321,7 +321,7 @@ It hashes every member file and Ed25519-signs the manifest — just `docker run`
 ### Deploy + watch APF inject it
 ```bash
 ( cd policy-bundle && tar czf /tmp/bundle.tgz * )
-helm upgrade apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --set-file bundle.tarGz=/tmp/bundle.tgz   # chart auto-rolls the pod
+helm upgrade apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --set image.pullSecrets[0].name=ghcr-pull --set-file bundle.tarGz=/tmp/bundle.tgz   # chart auto-rolls the pod
 # create a sandbox, then inspect it:
 openshell --gateway-endpoint http://127.0.0.1:8080 --gateway-insecure sandbox create --name demo1 --from <img> -- sleep 3600
 openshell ... sandbox get demo1     # shows spec.policy (your rules) + apf.nvidia.com/* provenance annotations
@@ -357,7 +357,7 @@ Then bump `policy_revision`, re-sign (same command as the
 ```bash
 # edit sandbox/default-policy.yaml (as above), bump policy_revision to 2, re-sign, then:
 ( cd policy-bundle && tar czf /tmp/bundle.tgz * )
-helm upgrade apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --set-file bundle.tarGz=/tmp/bundle.tgz   # chart auto-rolls the pod
+helm upgrade apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 -n apf --set image.pullSecrets[0].name=ghcr-pull --set-file bundle.tarGz=/tmp/bundle.tgz   # chart auto-rolls the pod
 # (recreate the OpenShell gateway pod so it re-reconciles the new policy)
 # new sandboxes now show policy-version: 2 — the change is live + attributed.
 ```
@@ -590,7 +590,7 @@ kubectl -n apf wait --for=condition=complete job/apf-apf-signing --timeout=150s
 
 # 3) install APF onto the signed bundle the Job produced:
 helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.0 \
-  -n apf --create-namespace --set bundle.existingConfigMap=apf-apf-bundle
+  -n apf --create-namespace --set image.pullSecrets[0].name=ghcr-pull --set bundle.existingConfigMap=apf-apf-bundle
 ```
 *(Private registry? The `--set image.pullSecrets[0].name=…` above lets the Job pull `apf-compile` (or use
 `--set compile.image=…` for a reachable image). The Job runs two containers: `sign` — `apf-compile
