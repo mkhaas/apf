@@ -72,6 +72,8 @@ The APF images and Helm chart are **private** on GHCR (`ghcr.io/mkhaas/apf`). Ge
 
 ## Fit with the Red Hat SAW governance-interceptor pattern
 
+> **Red Hat SAW maintainers:** a focused, self-contained [drop-in guide](REDHAT-SAW-DROPIN.md) covers the two-flag swap, the signed-bundle-vs-ConfigMap workflow, and a verification checklist.
+
 APF implements the **same OpenShell `GatewayInterceptor` gRPC contract** as the Red Hat **Secure Agent
 Workspace (SAW)** [`governance-interceptor`](https://github.com/validatedpatterns-sandbox/secure-agent-workspace)
 chart (port 18081, `failure_policy=fail_closed`). So APF **drops into that slot** — and adds what that
