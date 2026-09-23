@@ -83,6 +83,14 @@ assigns them), runs no root init container, adds no added capabilities, and sets
 RuntimeDefault` — so it deploys cleanly under the default **`restricted-v2`** SCC. Use `oc` in place of
 `kubectl`; everything else is identical.
 
+**True drop-in for SAW (two flags).** Red Hat's `gateway.toml` hardcodes the interceptor's Service name and — on default-deny GitOps clusters — restricts who may reach it. Two install flags make APF line up exactly:
+
+- `--set fullnameOverride=governance-interceptor` — names APF's Service `governance-interceptor`, so the gateway VM's `gateway.toml` (`grpc_endpoint = http://governance-interceptor.<ns>.svc.cluster.local:18081`) resolves it **unchanged**.
+- `--set networkPolicy.enabled=true` — adds an ingress NetworkPolicy allowing the KubeVirt gateway VM (`virt-launcher`) and the SAW setup Job to reach the interceptor port (mirrors SAW's own policy). Only needed where the namespace enforces default-deny.
+
+The OpenShell **gateway runs in a KubeVirt VM** (cloud-init renders `gateway.toml`), so APF can't self-register — you point that endpoint at APF's Service, and the two flags above make the default name and ingress line up. APF's **signed-bundle** model replaces SAW's plain-YAML `governance-policy` ConfigMaps: you feed APF a signed bundle instead of dropping YAML in Git — that provenance is exactly the Phase-II capability SAW lists as *not implemented*.
+
+
 ## Details
 
 APF ships as **three pre-built container images and a Helm chart**:
