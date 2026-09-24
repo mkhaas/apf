@@ -74,35 +74,9 @@ The APF images and Helm chart are **private** on GHCR (`ghcr.io/mkhaas/apf`). Ge
 
 APF implements the **same OpenShell `GatewayInterceptor` gRPC contract** as the Red Hat **Secure Agent
 Workspace (SAW)** [`governance-interceptor`](https://github.com/validatedpatterns-sandbox/secure-agent-workspace)
-chart (port `18081`, `failure_policy=fail_closed`, `timeout=500ms`, `gatewayEndpoint=https://127.0.0.1:17670`).
-So APF **drops into that slot** — and adds what that pattern lists as *Phase II, not implemented*: signed
-bundles, provenance, Cedar, egress content middleware, and this audit trail.
-
-**What APF replaces — and what it does not touch.** In SAW the per-user OpenShell **gateway runs inside a
-KubeVirt VM** (Fedora golden image; cloud-init renders `gateway.toml`), while the **governance-interceptor
-is a Kubernetes pod** (Deployment + Service + NetworkPolicy) that the VM calls over cluster DNS. APF
-replaces that **pod** — the gateway VM, its golden image, and `gateway.toml` are unchanged (no VM rebuild).
-
-**Two-flag drop-in.** SAW's `gateway.toml` hardcodes the interceptor's Service name and, on default-deny
-GitOps clusters, restricts who may reach it. Two install flags line APF up exactly:
-
-- `--set fullnameOverride=governance-interceptor` — names APF's Service `governance-interceptor`, so the
-  gateway VM's `gateway.toml` (`grpc_endpoint = http://governance-interceptor.<ns>.svc.cluster.local:18081`)
-  resolves it **unchanged**.
-- `--set networkPolicy.enabled=true` — adds the same ingress NetworkPolicy SAW ships (allow the KubeVirt
-  gateway VM `virt-launcher` + the `openshell-saw` setup Job on `18081`). Only needed where the namespace
-  enforces default-deny.
-
-**Policy delivery.** SAW's `governance-policy` chart mounts plain-YAML ConfigMaps (`policy.yaml`,
-`profiles/*.yaml`) with file-watch reload; APF instead consumes one **cryptographically signed bundle**
-(verified Ed25519 before load) — the *same* profile/policy semantics, delivered with provenance. Sign
-locally and commit the signed artifact (`--set-file bundle.tarGz=…`), or sign in-cluster with the signing
-Job (`--set signingJob.enabled=true`). That signing is exactly the Phase-II capability SAW lists as not
-implemented.
-
-**Contract parity:** port `18081`, `fail_closed`, `500ms` timeout, `gatewayEndpoint`, and the
-256Mi/500m · 128Mi/100m resource shape all match SAW's values; APF also renders a `startupProbe`
-(tcpSocket on the interceptor port) matching their readiness contract.
+chart (port 18081, `failure_policy=fail_closed`). So APF **drops into that slot** — and adds what that
+pattern lists as *Phase II, not implemented*: signed bundles, provenance, Cedar, egress content middleware,
+and this audit trail.
 
 **Running on OpenShift:** install with `--set openshift=true`. The chart then pins no UID/fsGroup (the SCC
 assigns them), runs no root init container, adds no added capabilities, and sets `seccompProfile:
