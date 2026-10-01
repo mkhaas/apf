@@ -1,5 +1,13 @@
 # APF (Agent Policy Fabric) — GTC Berlin PoC
 
+> ⚠️ **OpenShell 0.1.x compatibility.** The published `0.2.0` images were built for OpenShell **0.0.x** and are **rejected by a 0.1.x gateway** (the extension-protocol / PeerMetadata handshake). For OpenShell **0.1.x (validated on v0.1.2)**, use the **`0.1.0`** images — the Helm chart is unchanged, just override the three image tags on every `helm install` / `helm upgrade`:
+>
+> ```
+> --set gateway.image=ghcr.io/mkhaas/apf/apf-policy-gateway:0.1.0 \
+>   --set policyService.image=ghcr.io/mkhaas/apf/apf-policy-service:0.1.0 \
+>   --set compile.image=ghcr.io/mkhaas/apf/apf-compile:0.1.0
+> ```
+
 ## Contents
 
 - [Overview](#overview)
