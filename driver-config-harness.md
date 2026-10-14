@@ -82,7 +82,7 @@ Confirmed the kubernetes PVC shape normalizes correctly live (`volumes` joined t
 
 You need new **images** and a signed **bundle** — **no change to the released chart line** (this ships as a preview).
 
-1. **Images** — pull **`0.1.0-driverconfig.3`** (multi-arch amd64 + arm64) for all three: `apf-policy-gateway`, `apf-policy-service`, `apf-compile`. (The gateway enforces, policy-service mints the rule into the provenance token, apf-compile lowers the authored rule.)
+1. **Images** — pull **`0.1.0-driverconfig.3`** (multi-arch amd64 + arm64): `apf-policy-gateway` and `apf-policy-service`. The gateway enforces; policy-service mints the rule into the provenance token. (`apf-compile`, which lowers the authored rule when signing bundles, ships **inside** the policy-service image — run it via `docker run --entrypoint /usr/local/bin/apf-compile <policy-service-image>`.)
 2. **Chart** — install/upgrade with the **preview chart `0.2.1-driverconfig`**, which wires the rule + compute driver:
    ```
    helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.1-driverconfig \
