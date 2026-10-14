@@ -8,6 +8,16 @@
 >   --set compile.image=ghcr.io/mkhaas/apf/apf-compile:0.1.0
 > ```
 
+> 🧪 **Driver-config / harness-mount preview — one-command install.** APF now *supports* the Secure Agent Workspace harness-configuration mount (agent skills + MCP servers): it admits the exact sanctioned `saw-harness-*` mount by an admin via a **signed `driverConfig` allowlist**, and denies everything else (deny-by-default, covers templates). A **preview chart** bakes the rule + the admit-path images + the compute driver, so a plain install just works:
+>
+> ```
+> helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.1-driverconfig \
+>   -n apf --create-namespace --set image.pullSecrets[0].name=ghcr-pull
+> ```
+> (If your OpenShell gateway isn't podman, add `--set interceptor.computeDriver=kubernetes`.)
+>
+> Preview images (multi-arch amd64 + arm64): `apf-policy-gateway`, `apf-policy-service`, `apf-compile` at **`0.1.0-driverconfig.2`**. Chart + images are also mirrored to GitLab (`gitlab-master.nvidia.com:5005/agent-policy-fabric/apf/...`).
+
 ## Contents
 
 - [Overview](#overview)
