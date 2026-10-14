@@ -90,7 +90,7 @@ You need new **images** and a signed **bundle** — **no change to the released 
    ```
    Already on it? Just bump the image tag to `.3`.
 3. **Compute driver** — `--set interceptor.computeDriver=kubernetes` (or `podman`), matching your gateway.
-4. **Bundle** — an example SandboxPolicy with the `driver_config` block ships in the demo bundle (`examples/demo-bundle/sandbox/default-policy.yaml`). Re-sign with `apf-compile` to produce the signed bundle.
+4. **Bundle** — nothing to build for a first run. The chart ships a **signed tier-1 default bundle** that already carries the `driver_config` harness rule, plus credential examples (`gmail` = OAuth2 refresh-token, `slack` = static). A plain install works at the get-go on a tier-1 (interceptor-only) gateway — no supervisor middleware required. For your real deployment, supply your own signed bundle with `--set-file bundle.tarGz=<your-signed.tgz>` (or the in-cluster signing Job) — re-sign with `apf-compile`.
 5. **Existing policies/sandboxes** — no action. Deny-by-default means bundles without the rule keep today's behavior; normal creates are unaffected.
 
-Then a `CreateSandbox` with the sanctioned mount is admitted and everything else is denied + audited.
+Then a `CreateSandbox` with the sanctioned mount is admitted and everything else is denied + audited. Validated end-to-end on a plain registry install: admit + 3 deny variants + a normal sandbox created, with no middleware registered.
