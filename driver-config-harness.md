@@ -78,15 +78,19 @@ Confirmed the kubernetes PVC shape normalizes correctly live (`volumes` joined t
 
 **Tier-1 only.** An admission-only policy (driver_config + filesystem, no egress/content rules) injects **no** supervisor middleware, so this governs on an interceptor-only (tier-1) deployment with nothing else to register. APF wires its egress content middleware **only** when the policy carries L7 network/content rules.
 
-## Try it
+## Deploy / redeploy
 
-The preview chart bakes the rule + the admit-path images + the compute driver, so a plain install works:
+You need new **images** and a signed **bundle** — **no change to the released chart line** (this ships as a preview).
 
-```
-helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.1-driverconfig \
-  -n apf --create-namespace --set image.pullSecrets[0].name=ghcr-pull
-# If your OpenShell gateway isn't podman:
-#   --set interceptor.computeDriver=kubernetes
-```
+1. **Images** — pull **`0.1.0-driverconfig.3`** (multi-arch amd64 + arm64) for all three: `apf-policy-gateway`, `apf-policy-service`, `apf-compile`. (The gateway enforces, policy-service mints the rule into the provenance token, apf-compile lowers the authored rule.)
+2. **Chart** — install/upgrade with the **preview chart `0.2.1-driverconfig`**, which wires the rule + compute driver:
+   ```
+   helm install apf oci://ghcr.io/mkhaas/apf/charts/apf --version 0.2.1-driverconfig \
+     -n apf --create-namespace --set image.pullSecrets[0].name=ghcr-pull
+   ```
+   Already on it? Just bump the image tag to `.3`.
+3. **Compute driver** — `--set interceptor.computeDriver=kubernetes` (or `podman`), matching your gateway.
+4. **Bundle** — an example SandboxPolicy with the `driver_config` block ships in the demo bundle (`examples/demo-bundle/sandbox/default-policy.yaml`). Re-sign with `apf-compile` to produce the signed bundle.
+5. **Existing policies/sandboxes** — no action. Deny-by-default means bundles without the rule keep today's behavior; normal creates are unaffected.
 
-An example SandboxPolicy carrying the `driver_config` block ships in the demo bundle (`examples/demo-bundle/sandbox/default-policy.yaml`). Re-sign with `apf-compile` to produce a signed bundle, then a `CreateSandbox` with the sanctioned mount is admitted and everything else is denied + audited.
+Then a `CreateSandbox` with the sanctioned mount is admitted and everything else is denied + audited.
